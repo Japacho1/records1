@@ -1,16 +1,24 @@
-# Git ignore rules 
-# Ignore environment files
+# Python
+*.py[cod]
+__pycache__/
+*.so
+
+# Virtual environments
+venv/
+env/
+
+# Environment variables
 .env
 
-# Ignore documents folder
-media/documents/
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqlite3
+/media/documents/
 
-# Common system files
+# GitHub default
 .DS_Store
-Thumbs.db
-desktop.ini
 
-# IDE folders
-.vscode/
-.idea/
 
