@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Email reminders{% endblock %}
+{% block page_title %}
+<i class="fas fa-inbox" style="margin-right: 8px;"></i> Email Reminders
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/email_reminder_logs.css' %}">
+
+<style>
+    /* Modal textarea and inputs styling */
+    #bulkReminderModal .form-control {
+        font-size: 1rem;
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+
+    #bulkReminderModal .form-label {
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    #bulkReminderModal .form-check {
+        margin-bottom: 8px;
+    }
+
+    /* Scroll area for document checkboxes */
+    #bulkReminderModal .doc-types-container {
+        max-height: 250px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+    }
+
+    /* Note below checkboxes */
+    #bulkReminderModal .checkbox-note {
+        font-size: 0.9rem;
+        color: #555;
+        margin-top: 6px;
+        font-style: italic;
+    }
+
+    /* Buttons */
+    button.btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    button.btn-primary:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+    }
+    button.btn-secondary {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+    button.btn-secondary:hover {
+        background-color: #5c636a;
+        border-color: #565e64;
+    }
+
+    /* General page buttons spacing */
+    .btn {
+        margin-right: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<form method="get" action="{% url 'export_email_logs_excel' %}">
+    <button type="submit" class="btn btn-success mb-3">Export Logs to Excel</button>
+</form>
+
+<form method="get" class="form-inline mb-3">
+    <input type="text" name="q" class="form-control mr-2" placeholder="Search by name or email..." value="{{ query }}">
+    <select name="status" class="form-control mr-2">
+        <option value="">All</option>
+        <option value="Success" {% if status_filter == "Success" %}selected{% endif %}>Success</option>
+        <option value="Failed" {% if status_filter == "Failed" %}selected{% endif %}>Failed</option>
+    </select>
+    <button type="submit" class="btn btn-secondary">Filter</button>
+</form>
+
+<!-- Button to open the bulk email reminder modal -->
+<button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#bulkReminderModal">
+    Send Reminders to All Tenants
+</button>
+
+<form method="post" action="{% url 'delete_all_email_logs' %}" onsubmit="return confirm('Are you sure you want to delete all logs?');">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Delete All Logs</button>
+</form>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Tenant</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Subject</th>
+            <th>Sent At</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in page_obj %}
+        <tr>
+            <td>{{ log.tenant.name }}</td>
+            <td>{{ log.email }}</td>
+            <td>{{ log.status }}</td>
+            <td>{{ log.subject }}</td>
+            <td>{{ log.sent_at|date:"Y-m-d H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No logs found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}&status={{ status_filter }}">Previous</a>
+    {% endif %}
+
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&q={{ query }}&status={{ status_filter }}">Next</a>
+    {% endif %}
+</div>
+
+<!-- Bulk Email Reminder Modal -->
+<div class="modal fade" id="bulkReminderModal" tabindex="-1" aria-labelledby="bulkReminderModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="post" action="{% url 'send_reminders_to_all_tenants' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="bulkReminderModalLabel">Send Reminders to All Tenants</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+          <div class="mb-3">
+            <label for="bulk_subject" class="form-label">Subject</label>
+            <input type="text" name="subject" id="bulk_subject" class="form-control" value="Document Submission Reminder" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="bulk_cc_emails" class="form-label">CC Emails (comma separated)</label>
+            <input type="text" name="cc_emails" id="bulk_cc_emails" class="form-control" placeholder="e.g. cc1@example.com, cc2@example.com">
+          </div>
+
+          <div class="mb-3">
+            <label for="bulk_message" class="form-label">Message</label>
+<textarea name="message" id="bulk_message" class="form-control" rows="8" required>
+Please submit or renew the following documents:
+
+Thank you,
+Management
+</textarea>
+
+
+          <div class="mb-3">
+            <label class="form-label"><strong>Select Document Types to Include:</strong></label>
+            <div>
+              <button type="button" id="selectAllBtn" class="btn btn-sm btn-outline-primary mb-2">Select All</button>
+              <button type="button" id="unselectAllBtn" class="btn btn-sm btn-outline-secondary mb-2">Unselect All</button>
+            </div>
+            <div class="doc-types-container">
+              {% for doc_type in all_doc_types %}
+                <div class="form-check">
+                  <input class="form-check-input doc-type-checkbox" type="checkbox" name="doc_types" value="{{ doc_type.id }}" id="bulk_doc_type_{{ doc_type.id }}">
+                  <label class="form-check-label" for="bulk_doc_type_{{ doc_type.id }}">{{ doc_type.label }}</label>
+                </div>
+              {% empty %}
+                <p>No document types found.</p>
+              {% endfor %}
+            </div>
+            <div class="checkbox-note">
+              If no document type is selected, reminders will be sent for all missing documents.
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Send Emails</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const unselectAllBtn = document.getElementById('unselectAllBtn');
+    const checkboxes = document.querySelectorAll('.doc-type-checkbox');
+
+    selectAllBtn.addEventListener('click', () => {
+      checkboxes.forEach(cb => cb.checked = true);
+    });
+
+    unselectAllBtn.addEventListener('click', () => {
+      checkboxes.forEach(cb => cb.checked = false);
+    });
+  });
+</script>
+
+{% endblock %}

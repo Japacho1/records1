@@ -1,0 +1,23 @@
+<!-- fillingsystem/templates/fillingsystem/client_list.html -->
+{% extends 'fillingsystem/base.html' %}
+
+{% block content %}
+<h1>Clients</h1>
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Documents</th>
+    </tr>
+    {% for client in clients %}
+    <tr>
+        <td>{{ client.name }}</td>
+        <td>{{ client.get_client_type_display }}</td>
+        <td><a href="{% url 'fillingsystem:document_list' client.id %}">View Documents</a></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="3">No clients found.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Profile{% endblock %}
+{% block page_title %}
+Profile
+{% endblock %}
+
+{% block content %}
+<style>
+    .profile-container {
+        max-width: 500px;
+        margin: auto;
+        background: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2, h3 {
+        text-align: center;
+        color: #004085;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    label {
+        font-weight: bold;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    input[type="password"], input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .toggle-password {
+        float: right;
+        margin-top: -30px;
+        margin-right: 10px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #1e1e2f;
+    }
+
+    button {
+        background-color: #1e1e2f;
+        color: white;
+        border: none;
+        padding: 12px;
+        width: 100%;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .messages {
+        margin-bottom: 15px;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    .messages.success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .messages.error {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+</style>
+
+<div class="profile-container">
+    <h2>My Profile</h2>
+
+    <p><strong>Username:</strong> {{ user.username }}</p>
+
+    <hr>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="messages {{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <h3>Change Password</h3>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% for field in password_form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    <small style="color:red;">{{ field.errors|striptags }}</small>
+                {% endif %}
+                {% if field.name == "old_password" or field.name == "new_password1" or field.name == "new_password2" %}
+                    <span class="toggle-password" onclick="togglePassword('{{ field.auto_id }}')">Show</span>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <button type="submit">Change Password</button>
+    </form>
+</div>
+
+<script>
+    function togglePassword(id) {
+        const input = document.getElementById(id);
+        const toggleText = input.nextElementSibling;
+        if (input.type === "password") {
+            input.type = "text";
+            toggleText.textContent = "Hide";
+        } else {
+            input.type = "password";
+            toggleText.textContent = "Show";
+        }
+    }
+</script>
+
+{% endblock %}

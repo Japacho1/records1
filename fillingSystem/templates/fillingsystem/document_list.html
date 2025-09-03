@@ -1,0 +1,37 @@
+<!-- fillingsystem/templates/fillingsystem/document_list.html -->
+{% extends 'fillingsystem/base.html' %}
+
+{% block content %}
+<h1>Documents for {{ client.name }}</h1>
+
+<a href="{% url 'fillingsystem:client_list' %}">&larr; Back to Clients</a>
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Expiry Date</th>
+        <th>Exists</th>
+        <th>File</th>
+    </tr>
+    {% for doc in documents %}
+    <tr>
+        <td>{{ doc.name }}</td>
+        <td>{{ doc.get_category_display }}</td>
+        <td>{{ doc.expiry_date|default:"N/A" }}</td>
+        <td>{{ doc.exists }}</td>
+        <td>
+            {% if doc.file %}
+                <a href="{{ doc.file.url }}" target="_blank">View File</a>
+                |
+                <a href="{{ doc.file.url }}" target="_blank" onclick="window.print();return false;">Print</a>
+            {% else %}
+                No file
+            {% endif %}
+        </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">No documents found for this client.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

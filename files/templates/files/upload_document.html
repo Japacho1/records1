@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload Document{% endblock %}
+{% block page_title %}
+<i class="fas fa-upload" style="margin-right: 8px;"></i> Upload Documents
+{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="{% static 'css/upload_document.css' %}">
+
+<div class="upload-container">
+
+    {% if messages %}
+        <div class="upload-message">
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data" class="upload-form" novalidate>
+        {% csrf_token %}
+
+        <!-- Tenant Selection -->
+        <div class="upload-form-group">
+            <label for="{{ form.tenant.id_for_label }}">Tenant</label>
+            {{ form.tenant }}
+            {{ form.tenant.errors }}
+        </div>
+
+        <!-- Document Type Selection -->
+        <div class="upload-form-group">
+            <label for="{{ form.doc_type_fk.id_for_label }}">Document Type</label>
+            {{ form.doc_type_fk }}
+            {{ form.doc_type_fk.errors }}
+        </div>
+
+        <!-- File Upload -->
+        <div class="upload-form-group">
+            <label for="id_file">File(s)</label>
+            <input type="file" name="file" id="id_file" multiple>
+            {% if form.file.errors %}
+                <ul class="upload-errorlist">
+                    {% for error in form.file.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <!-- Commencement Date -->
+        <div class="upload-form-group">
+            <label for="id_commencement_date">Commencement Date (optional)</label>
+            <input type="text" id="id_commencement_date" name="commencement_date" placeholder="Optional">
+        </div>
+
+        <!-- Automatically Calculated Expiry Date -->
+        <div class="upload-form-group">
+            <label for="id_calculated_expiry">Expiry Date (auto-generated)</label>
+            <input type="text" id="id_calculated_expiry" name="calculated_expiry" readonly>
+        </div>
+
+        <button type="submit" class="upload-submit-btn">Upload</button>
+    </form>
+</div>
+
+<!-- JS Libraries -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // Initialize Select2
+    $('#{{ form.tenant.id_for_label }}').select2({
+        width: '100%',
+        placeholder: 'Select a tenant',
+        allowClear: true
+    });
+    $('#{{ form.doc_type_fk.id_for_label }}').select2({
+        width: '100%',
+        placeholder: 'Select document type',
+        allowClear: true
+    });
+
+    // Initialize Flatpickr
+    flatpickr('#id_commencement_date', { dateFormat: "Y-m-d", allowInput: true });
+    flatpickr('#id_calculated_expiry', { dateFormat: "Y-m-d", allowInput: false });
+
+    {% if messages %}
+    const fileInput = document.getElementById('id_file');
+    if (fileInput) fileInput.value = '';
+    {% endif %}
+
+    // Auto-calculate expiry based on commencement
+    function calculateExpiry() {
+        const tenantId = $('#{{ form.tenant.id_for_label }}').val();
+        const docTypeId = $('#{{ form.doc_type_fk.id_for_label }}').val();
+        const commencement = $('#id_commencement_date').val();
+
+        if (tenantId && docTypeId && commencement) {
+            // Call backend API to get expiry days based on tenant type + document type
+            fetch(`/calculate-expiry/?tenant=${tenantId}&doc_type=${docTypeId}&commencement=${commencement}`)
+                .then(res => res.json())
+                .then(data => {
+                    $('#id_calculated_expiry').val(data.expiry_date);
+                });
+        } else {
+            $('#id_calculated_expiry').val('');
+        }
+    }
+
+    // Trigger expiry calculation when tenant, doc type, or commencement date changes
+    $('#{{ form.tenant.id_for_label }}, #{{ form.doc_type_fk.id_for_label }}, #id_commencement_date')
+        .on('change keyup', calculateExpiry);
+});
+</script>
+{% endblock %}

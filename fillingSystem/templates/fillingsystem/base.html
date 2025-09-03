@@ -1,0 +1,21 @@
+<!-- fillingsystem/templates/fillingsystem/base.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Filling System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        nav a { margin-right: 15px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; }
+        th { background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="{% url 'fillingsystem:client_list' %}">Clients</a>
+    </nav>
+    <hr>
+    {% block content %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analytics Dashboard{% endblock %}
+{% block page_title %}
+<i class="fas fa-chart-bar" style="margin-right: 8px;"></i>Analytics
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/analytics.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+
+    
+
+    <!-- Stat Cards with Pie Chart -->
+    <div class="analytics-card-row">
+        <div class="analytics-card">
+            <h3>Total Documents Uploaded</h3>
+            <p>{{ total_documents }}</p>
+        </div>
+        <div class="analytics-card">
+            <h3>Expired Documents</h3>
+            <p>{{ expired_documents_count }}</p>
+        </div>
+        <div class="analytics-card">
+            <h3>Expiring Soon (30 days)</h3>
+            <p>{{ expiring_soon_count }}</p>
+        </div>
+        <div class="analytics-card">
+            <h3><i class="fas fa-folder-open" style="margin-right: 5px;"></i> Document Types</h3>
+            <div class="analytics-pie-wrapper">
+                <canvas id="docTypeChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documents by Type Table -->
+    <div class="analytics-table-section">
+        <h2>Documents by Type</h2>
+        <table class="analytics-table">
+            <thead>
+                <tr><th>Document Type</th><th>Count</th></tr>
+            </thead>
+            <tbody>
+                {% for item in documents_per_type %}
+                    <tr>
+                        <td>{{ item.doc_type_fk__label|default:"Unknown" }}</td>
+                        <td>{{ item.count }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="2">No documents found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Tenants by Type Table -->
+    <div class="analytics-table-section">
+        <h2>Tenants by Type</h2>
+        <table class="analytics-table">
+            <thead>
+                <tr><th>Tenant Type</th><th>Count</th></tr>
+            </thead>
+            <tbody>
+               {% for item in tenants_per_type %}
+    <tr>
+        <td>{{ item.tenant_type_label }}</td>
+        <td>{{ item.count }}</td>
+    </tr>
+{% empty %}
+    <tr><td colspan="2">No tenants found.</td></tr>
+{% endfor %}
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pie Chart -->
+<script>
+    const docTypes = {{ doc_types|safe }};
+    const docTypeCounts = {{ doc_type_values|safe }};
+
+    new Chart(document.getElementById('docTypeChart'), {
+        type: 'bar',
+        data: {
+            labels: docTypes,
+            datasets: [{
+                label: 'Document Count',
+                data: docTypeCounts,
+                backgroundColor: [
+                    '#007bff', '#28a745', '#ffc107', '#dc3545', '#6610f2',
+                    '#fd7e14', '#20c997', '#17a2b8', '#6f42c1', '#e83e8c'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Count'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Document Types'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: true
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

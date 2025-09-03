@@ -1,0 +1,16 @@
+# Git ignore rules 
+# Ignore environment files
+.env
+
+# Ignore documents folder
+media/documents/
+
+# Common system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE folders
+.vscode/
+.idea/
+

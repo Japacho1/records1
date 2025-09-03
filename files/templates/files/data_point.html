@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Data Point{% endblock %}
+
+{% block page_title %}
+<i class="fas fa-user-plus" style="margin-right: 8px;"></i>Data Point
+{% endblock %}
+
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+ 
+
+    <!-- Tenants Group -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <strong>Tenants</strong>
+        </div>
+        <div class="card-body">
+            <a href="{% url 'export_tenants_excel' %}" class="btn btn-success">
+                <i class="fas fa-file-excel"></i> Export Tenants
+            </a>
+        </div>
+    </div>
+
+    <!-- Expired Documents Group -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <strong>Expired Documents</strong>
+        </div>
+        <div class="card-body">
+            <a href="{% url 'export_expired_documents' %}" class="btn btn-success">
+                <i class="fas fa-file-excel"></i> Export Expired Docs
+            </a>
+        </div>
+    </div>
+
+    <!-- Tracked Expiry Group -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <strong>Tracked Expiry</strong>
+        </div>
+        <div class="card-body">
+            <a href="{% url 'export_tracked_expiry_excel' %}" class="btn btn-success">
+                <i class="fas fa-file-excel"></i> Export Tracked Expiry
+            </a>
+        </div>
+    </div>
+
+    <!-- Email Logs Group -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <strong>Email Logs</strong>
+        </div>
+        <div class="card-body">
+            <a href="{% url 'export_email_logs_excel' %}" class="btn btn-success">
+                <i class="fas fa-file-excel"></i> Export Email Logs
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

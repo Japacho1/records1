@@ -1,0 +1,21 @@
+<!-- templates/includes/sidebar.html -->
+{% load static %}
+<!-- Remove the stylesheet link here if already included in base template -->
+
+<aside class="sidebar">
+    <div class="profile-icon">
+        <a href="{% url 'profile' %}">
+            <img src="{% static 'images/profile.jpg' %}" alt="My Profile" />
+        </a>
+    </div>
+
+    <ul class="sidebar-nav">
+        <li><a href="{% url 'dashboard' %}">🏠 Dashboard</a></li>
+        <li><a href="{% url 'add_tenant' %}">➕ Add Tenant</a></li>
+        <li><a href="{% url 'upload_document' %}">📤 Upload Document</a></li>
+        <li><a href="{% url 'expired_documents' %}">⚠️ Expired Documents</a></li>
+        <li><a href="{% url 'analytics' %}">📊 Analytics</a></li>
+        <li><a href="{% url 'tenants_documents' %}">📋 Tenants & Documents</a></li>
+        <li><a href="{% url 'upload_documents_by_type' %}">📁 Bulk Upload</a></li>
+    </ul>
+</aside>

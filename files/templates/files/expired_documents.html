@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Expired Documents{% endblock %}
+
+{% block page_title %}
+<i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>Expired Docs
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/expired_documents.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<div class="expired-container">
+
+    <!-- Filter Form -->
+    <form method="get" class="filter-form">
+        <input type="text" name="search" placeholder="Search by tenant..." value="{{ query }}">
+        
+        <select name="doc_type">
+            <option value="">All Document Types</option>
+            {% for key, value in doc_types %}
+                <option value="{{ key }}" {% if key == doc_type_filter %}selected{% endif %}>{{ value }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- New Tenant Type Filter -->
+        <select name="tenant_type">
+            <option value="">All Tenant Types</option>
+            {% for key, value in tenant_types %}
+                <option value="{{ key }}" {% if key == tenant_type_filter %}selected{% endif %}>{{ value }}</option>
+            {% endfor %}
+        </select>
+        
+        <button type="submit">Filter</button>
+    </form>
+
+    <!-- Export & Track Expiry Buttons -->
+    {% if page_obj %}
+    <div style="margin: 15px 0;">
+        <a href="{% url 'export_expired_documents' %}" 
+           class="btn btn-success d-inline-flex align-items-center gap-2 px-3 py-2 rounded shadow-sm" 
+           style="font-weight: 500; font-size: 15px;">
+            <i class="bi bi-file-earmark-spreadsheet-fill" style="font-size: 1.2rem;"></i> 
+            Export to Excel
+        </a>
+
+        <a href="{% url 'track_expiry' %}" 
+           class="btn btn-warning d-inline-flex align-items-center gap-2 px-3 py-2 rounded shadow-sm" 
+           style="font-weight: 500; font-size: 15px; margin-left: 10px;">
+            <i class="bi bi-calendar-event" style="font-size: 1.2rem;"></i> 
+            Track Expiry
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Expired Documents Table -->
+    {% if page_obj %}
+        <table class="expired-table" id="expiredTable">
+            <thead>
+                <tr>
+                    <th>Tenant</th>
+                    <th>Tenant Type</th>  <!-- 👈 NEW -->
+                    <th>Document Type</th>
+                    <th>Expiry Date</th>
+                    <th>Status</th>
+                    <th>File</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in page_obj %}
+                    <tr>
+                        <td>{{ doc.tenant.name }}</td>
+                        <td>
+    {% if doc.tenant.tenant_type_fk %}
+        {{ doc.tenant.tenant_type_fk.label }}
+    {% else %}
+        No Type
+    {% endif %}
+</td>
+
+ <!-- 👈 NEW -->
+                        <td>{{ doc.doc_type_fk.label }}</td>
+                        <td>{{ doc.expiry_date }}</td>
+                        <td class="expired-status">Expired</td>
+                        <td>
+                            {% if doc.file %}
+                                <a href="{{ doc.file.url }}" target="_blank">View</a>
+                            {% else %}
+                                <span class="text-muted">No File</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="expired-pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}&search={{ query }}&doc_type={{ doc_type_filter }}&tenant_type={{ tenant_type_filter }}">Previous</a>
+            {% endif %}
+
+            {% for page in page_obj.paginator.page_range %}
+                {% if page == page_obj.number %}
+                    <span class="current">{{ page }}</span>
+                {% else %}
+                    <a href="?page={{ page }}&search={{ query }}&doc_type={{ doc_type_filter }}&tenant_type={{ tenant_type_filter }}">{{ page }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&search={{ query }}&doc_type={{ doc_type_filter }}&tenant_type={{ tenant_type_filter }}">Next</a>
+            {% endif %}
+        </div>
+    {% else %}
+        <p class="no-results">No expired documents found.</p>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<!-- SheetJS (XLSX) Library -->
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Document Types & Departments{% endblock %}
+
+{% block content %}
+<h2>Manage Document Types & Departments</h2>
+
+<div style="display: flex; gap: 40px; flex-wrap: wrap;">
+
+  <!-- Document Types -->
+  <section style="flex: 1; min-width: 300px;">
+    <h3>Document Types</h3>
+    <form method="post" style="margin-bottom: 20px;">
+      {% csrf_token %}
+      {{ doc_form.as_p }}
+      <button type="submit" name="add_doc_type">Add Document Type</button>
+    </form>
+
+    <ul>
+      {% for dt in doc_types %}
+        <li>
+          {{ dt.key }} — {{ dt.label }}
+          <form method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" name="delete_doc_type" value="{{ dt.id }}" onclick="return confirm('Delete this document type?');">Delete</button>
+          </form>
+        </li>
+      {% empty %}
+        <li>No document types yet.</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <!-- Departments -->
+  <section style="flex: 1; min-width: 300px;">
+    <h3>Departments</h3>
+    <form method="post" style="margin-bottom: 20px;">
+      {% csrf_token %}
+      {{ dept_form.as_p }}
+      <button type="submit" name="add_department">Add Department</button>
+    </form>
+
+    <ul>
+      {% for d in departments %}
+        <li>
+          {{ d.name }}
+          <form method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" name="delete_department" value="{{ d.id }}" onclick="return confirm('Delete this department?');">Delete</button>
+          </form>
+        </li>
+      {% empty %}
+        <li>No departments yet.</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+</div>
+{% endblock %}

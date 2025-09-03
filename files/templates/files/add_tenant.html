@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Tenant{% endblock %}
+
+{% block page_title %}
+<i class="fas fa-user-plus" style="margin-right: 8px;"></i>Add Tenant
+{% endblock %}
+
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/add.css' %}">
+<style>
+    .excel-upload-section {
+        margin-top: 30px;
+        padding: 20px;
+        border: 1px dashed #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+    .download-template {
+        display: inline-block;
+        margin-top: 10px;
+        color: #4CAF50;
+    }
+    .formats {
+        font-size: 0.9em;
+        color: #666;
+        margin-top: 10px;
+    }
+    /* Message styling */
+    .messages {
+        margin: 20px 0;
+    }
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+    .alert-success {
+        color: #3c763d;
+        background-color: #dff0d8;
+        border-color: #d6e9c6;
+    }
+    .alert-error {
+        color: #a94442;
+        background-color: #f2dede;
+        border-color: #ebccd1;
+    }
+    .alert-info {
+        color: #31708f;
+        background-color: #d9edf7;
+        border-color: #bce8f1;
+    }
+    .unit-form {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="add-tenant-container">
+    <!-- Messages display -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% endif %}">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Tenant form -->
+    <form method="POST" class="add-tenant-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <!-- Optional Units section -->
+        <h4>Units (Optional)</h4>
+        <div id="unit-formset">
+            {{ formset.management_form }}
+            {% for unit_form in formset %}
+                <div class="unit-form">
+                    {{ unit_form.as_p }}
+                    {% if unit_form.instance.pk %}
+                        <label>Delete?</label> {{ unit_form.DELETE }}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="add-tenant-submit">Save Tenant</button>
+    </form>
+
+    <!-- Excel upload -->
+    <div class="excel-upload-section">
+        <h3><i class="fas fa-file-excel"></i> Bulk Upload via Excel</h3>
+        <form method="POST" enctype="multipart/form-data" action="{% url 'bulk_upload_tenants' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="excel_file">Select Excel File:</label>
+                <input type="file" name="excel_file" id="excel_file" accept=".xlsx, .xls, .csv" required>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-upload"></i> Upload and Process
+            </button>
+            <a href="{% url 'download_tenant_template' %}" class="download-template">
+                <i class="fas fa-download"></i> Download Excel Template
+            </a>
+            <div class="formats">
+                <p><strong>Accepted formats:</strong> .xlsx, .xls</p>
+                <p><strong>Required columns:</strong> tenant_name, email (optional), tenant_type</p>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Optional JavaScript for dismissing messages -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Close alert buttons
+        document.querySelectorAll('.alert .close').forEach(function(button) {
+            button.addEventListener('click', function() {
+                this.parentElement.style.display = 'none';
+            });
+        });
+
+        // Auto-dismiss messages after 5 seconds
+        setTimeout(function() {
+            document.querySelectorAll('.alert').forEach(function(alert) {
+                alert.style.display = 'none';
+            });
+        }, 5000);
+    });
+</script>
+{% endblock %}

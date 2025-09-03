@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tenant Document Status{% endblock %}
+
+{% block extra_css %}
+<style>
+/* General table styling to look like Excel */
+.table-container table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Header styling */
+.table-container th {
+    background-color: #d9e6f2;
+    color: #000;
+    font-weight: bold;
+    border: 1px solid #9ea7ad;
+    padding: 6px 10px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* Cell styling */
+.table-container td {
+    border: 1px solid #c6c6c6;
+    padding: 5px 8px;
+    text-align: center;
+}
+
+/* Name column */
+td.name {
+    text-align: left;
+}
+
+/* YES highlight */
+.yes {
+    background-color: #c6efce;
+    color: #006100;
+    font-weight: bold;
+}
+
+/* Alternating row colors for Excel feel */
+.table-container tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+.table-container tbody tr:hover {
+    background-color: #d1e0f0;
+}
+
+/* Filters form styling */
+form#filterForm {
+    margin-bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 20px;
+}
+form#filterForm label {
+    font-weight: bold;
+    white-space: nowrap;
+}
+form#filterForm select, form#filterForm input[type="checkbox"] {
+    padding: 4px 6px;
+}
+
+/* Row count and checkbox wrapper */
+#rowCountWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+#rowCountWrapper label {
+    font-weight: normal;
+}
+
+/* Export button */
+#exportBtn {
+    margin-bottom: 15px;
+    padding: 8px 12px;
+    cursor: pointer;
+    background-color: #4fc3f7;
+    border: none;
+    color: white;
+    border-radius: 4px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+#exportBtn:hover {
+    background-color: #3a9bdc;
+}
+
+/* Table container for scrollable view */
+.table-container {
+    max-height: 80vh;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Excel-style shadow on header */
+.table-container thead th {
+    box-shadow: inset 0 -1px 0 #9ea7ad;
+}
+</style>
+{% endblock %}
+
+{% block page_title %}<i class="fas fa-info-circle me-2" style="margin-right: 8px;"></i>Tenant Document Status{% endblock %}
+
+{% block content %}
+<form method="get" id="filterForm">
+    <label for="tenant_type">Filter by Tenant Type:</label>
+    <select name="tenant_type" id="tenant_type" onchange="this.form.submit()">
+        <option value="">All</option>
+        {% for tt in tenant_types %}
+            <option value="{{ tt.code }}" {% if tt.code == selected_tenant_type %}selected{% endif %}>
+                {{ tt.label }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label for="doc_type">Filter by Document Type:</label>
+    <select name="doc_type" id="doc_type" onchange="this.form.submit()">
+        <option value="">All</option>
+        {% for dt in doc_types %}
+            <option value="{{ dt.code }}" {% if dt.code == selected_doc_type %}selected{% endif %}>
+                {{ dt.label }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label for="sort">Sort by Name:</label>
+    <select name="sort" id="sort" onchange="this.form.submit()">
+        <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>A to Z</option>
+        <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Z to A</option>
+    </select>
+</form>
+
+<div id="rowCountWrapper">
+    <p id="rowCount">Showing 0 rows</p>
+    <label>
+        <input type="checkbox" name="missing_docs" id="missing_docs" value="1" form="filterForm"
+        {% if missing_docs %}checked{% endif %} onchange="document.getElementById('filterForm').submit()">
+        Show only tenants without this document
+    </label>
+</div>
+
+<button id="exportBtn" type="button">Export to Excel</button>
+
+<div class="table-container">
+<table>
+    <thead>
+        <tr>
+            <th>NO.</th>
+            <th>TENANTS</th>
+            {% for code in doc_codes %}
+                <th>{{ code }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in table_data %}
+            <tr>
+                <td>{{ row.no }}</td>
+                <td class="name">{{ row.tenant_name }}</td>
+                {% for value in row.docs_values %}
+                    {% if value == "YES" %}
+                        <td class="yes">YES</td>
+                    {% else %}
+                        <td></td>
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="{{ 2|add:doc_codes|length }}">No tenants found.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Export to Excel
+    document.getElementById('exportBtn').addEventListener('click', function () {
+        var table = document.querySelector('table');
+        var wb = XLSX.utils.table_to_book(table, {sheet:"TenantStatus"});
+        XLSX.writeFile(wb, 'tenant_document_status.xlsx');
+    });
+
+    // Update row count
+    const rowCountEl = document.getElementById('rowCount');
+    const tableBody = document.querySelector('table tbody');
+
+    function updateRowCount() {
+        const rows = Array.from(tableBody.querySelectorAll('tr'));
+        if (rows.length === 1 && rows[0].querySelector('td[colspan]')) {
+            rowCountEl.textContent = "Showing 0 rows";
+        } else {
+            rowCountEl.textContent = `Showing ${rows.length} row${rows.length !== 1 ? 's' : ''}`;
+        }
+    }
+
+    updateRowCount();
+});
+</script>
+{% endblock %}

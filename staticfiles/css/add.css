@@ -1,0 +1,89 @@
+/* Container */
+.add-tenant-container {
+width: 600px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #f7f9fc;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+}
+
+/* Form */
+.add-tenant-form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Label for each field */
+.add-tenant-form label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+/* Name input */
+.add-tenant-form input[name="name"] {
+  padding: 10px 12px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.add-tenant-form input[name="name"]:focus {
+  border-color: #05142b;
+  outline: none;
+  
+}
+
+/* Email input */
+.add-tenant-form input[name="email"] {
+  padding: 10px 12px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+  font-style: italic; /* subtle italic for email field */
+}
+
+.add-tenant-form input[name="email"]:focus {
+  border-color: #05142b;
+  outline: none;
+  
+}
+
+/* Tenant type select */
+.add-tenant-form select[name="tenant_type_fk"] {
+  padding: 10px 12px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  margin-bottom: 30px;
+  transition: border-color 0.3s ease;
+  background-color: white;
+}
+
+.add-tenant-form select[name="tenant_type_fk"]:focus {
+  border-color: #05142b;
+  outline: none;
+
+}
+
+/* Submit button */
+.add-tenant-submit {
+  padding: 12px;
+  font-weight: 700;
+  background-color: #04212e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background-color 0.3s ease;
+}
+
+.add-tenant-submit:hover {
+  background-color: #3a9bdc;
+}

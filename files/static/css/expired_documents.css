@@ -1,0 +1,102 @@
+.expired-container {
+    font-family: Arial, sans-serif;
+    padding: 30px;
+    background: #f8f9fa;
+}
+
+.expired-title {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.filter-form {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.filter-form input[type="text"],
+.filter-form select {
+    padding: 8px;
+    width: 200px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.filter-form button {
+    padding: 8px 16px;
+    background: #1e1e2f;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.filter-form button:hover {
+    background: #0056b3;
+}
+
+.expired-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.expired-table th,
+.expired-table td {
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    text-align: left;
+}
+
+.expired-table th {
+    background-color: #f1f1f1;
+}
+
+.expired-status {
+    color: red;
+    font-weight: bold;
+}
+
+.expired-pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.expired-pagination span,
+.expired-pagination a {
+    margin: 0 5px;
+    padding: 5px 10px;
+    text-decoration: none;
+    background: #ddd;
+    border-radius: 5px;
+    color: black;
+}
+
+.expired-pagination .current {
+    background: #1e1e2f;
+    color: white;
+    font-weight: bold;
+}
+
+.back-link {
+    display: block;
+    margin-top: 30px;
+    text-align: center;
+    color: #1e1e2f;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+.no-results {
+    text-align: center;
+    color: #666;
+    margin-top: 20px;
+    font-style: italic;
+}

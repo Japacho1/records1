@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Tenant Dashboard{% endblock %}
+
+{% block page_title %}
+<i class="fas fa-home" style="margin-right: 8px;"></i> Tenant Dashboard
+{% endblock %}
+
+{% block content %}
+<!-- Search and Filter Form -->
+<form method="GET" action="" class="search-form">
+    <input type="text" name="search" placeholder="Search tenants..." value="{{ search_query }}" class="search-input">
+
+    <!-- Dropdown to filter by tenant type -->
+    <select name="type_filter" onchange="this.form.submit()" class="search-input">
+        <option value="">All Types</option>
+        {% for type in tenant_types %}
+            <option value="{{ type.code }}" {% if type.code == selected_type %}selected{% endif %}>
+                {{ type.label }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit" class="search-button">Search</button>
+</form>
+
+<!-- Tenants Table -->
+<style>
+    .tenant-table tr {
+        transition: background-color 0.2s ease-in-out;
+    }
+    .tenant-table tr:hover {
+        background-color: #f0f8ff; /* light blue highlight */
+    }
+    .tenant-name {
+        color: #1e90ff; /* light blue */
+        font-weight: bold;
+    }
+    .tenant-type {
+        color: #000000; /* black */
+        font-weight: bold;
+    }
+</style>
+
+<table class="tenant-table" border="1" cellpadding="5" cellspacing="0" style="width:100%; margin-top:20px;">
+    <thead>
+        <tr>
+            <th>Tenant Name</th>
+            <th>Tenant Type</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for tenant in tenants %}
+            <tr onclick="window.location='{% url 'tenant_detail' tenant.id %}'" style="cursor: pointer;">
+                <td class="tenant-name">{{ tenant.name }}</td>
+                <td class="tenant-type">
+                    {% if tenant.tenant_type_fk %}
+                        {{ tenant.tenant_type_fk.label }}
+                    {% else %}
+                        No Type
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="2">No tenants found.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination -->
+<div class="pagination" style="margin-top: 20px;">
+    {% if tenants.has_previous %}
+        <a href="?search={{ search_query }}&type_filter={{ selected_type }}&page={{ tenants.previous_page_number }}" class="page-link">« Previous</a>
+    {% endif %}
+    <span class="page-info">Page {{ tenants.number }} of {{ tenants.paginator.num_pages }}</span>
+    {% if tenants.has_next %}
+        <a href="?search={{ search_query }}&type_filter={{ selected_type }}&page={{ tenants.next_page_number }}" class="page-link">Next »</a>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}Track Expiry Dates{% endblock %}
+{% block page_title %}TRACK EXPIRY DATES{% endblock %}
+
+{% block content %}
+<style>
+    /* Page Container */
+    .container {
+        background: #fff;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        margin-top: 20px;
+    }
+
+    h2 { font-weight: 600; color: #2c3e50; margin-bottom: 20px; }
+
+    /* Form Styling */
+    #filter-form .form-control {
+        border-radius: 8px;
+        border: 1px solid #dcdcdc;
+        box-shadow: none;
+        transition: 0.2s;
+    }
+    #filter-form .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 4px rgba(13,110,253,0.3);
+    }
+    #filter-form .btn { border-radius: 8px; padding: 8px 16px; font-weight: 500; }
+
+    /* Table Styling */
+    .table { margin-top: 15px; border-radius: 12px; overflow: hidden; }
+    .table thead { background: #f8f9fa; font-weight: 600; }
+    .table th a { color: #2c3e50; text-decoration: none; }
+    .table th a:hover { color: #0d6efd; }
+
+    /* Badge Styling */
+    .badge { font-size: 0.9rem; padding: 6px 10px; border-radius: 8px; }
+
+    /* Pagination */
+    .pagination { justify-content: center; margin-top: 20px; }
+    .page-link { border-radius: 6px !important; margin: 0 2px; }
+
+    /* File Links */
+    td a { text-decoration: none; font-weight: 500; color: #0d6efd; }
+    td a:hover { text-decoration: underline; }
+
+    /* Export Button */
+    #export-btn { margin-bottom: 15px; }
+</style>
+
+<div class="container">
+
+    <!-- Filter form -->
+    <form id="filter-form" class="row mb-3">
+        <div class="col-md-3">
+            <input type="number" name="days" id="days" class="form-control" placeholder="Enter days" value="7">
+        </div>
+        <div class="col-md-3">
+            <input type="text" name="search" id="search" class="form-control" placeholder="Search tenant...">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary">Apply</button>
+        </div>
+        <div class="col-md-2">
+            <button id="export-btn" class="btn btn-success">Export to Excel</button>
+        </div>
+    </form>
+
+    <!-- Documents Table -->
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th><a href="#" class="sort" data-sort="tenant">Tenant</a></th>
+                <th><a href="#" class="sort" data-sort="tenant_type">Tenant Type</a></th>
+                <th><a href="#" class="sort" data-sort="doc_type">Document Type</a></th>
+                <th><a href="#" class="sort" data-sort="expiry_date">Expiry Date</a></th>
+                <th>Days Remaining</th>
+                <th>Status</th>
+                <th>File</th>
+            </tr>
+        </thead>
+        <tbody id="docs-table-body">
+            <!-- Filled by AJAX -->
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <nav>
+        <ul class="pagination" id="pagination">
+            <!-- Filled by AJAX -->
+        </ul>
+    </nav>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    let sort_by = "expiry_date";
+    let page = 1;
+
+    function loadDocuments() {
+        let days = document.getElementById("days").value || 7;
+        let search = document.getElementById("search").value;
+
+        fetch(`/expiry-data/?days=${days}&search=${encodeURIComponent(search)}&sort=${sort_by}&page=${page}`)
+            .then(response => response.json())
+            .then(data => {
+                // Fill table
+                let tbody = document.getElementById("docs-table-body");
+                tbody.innerHTML = "";
+                if (data.documents.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">No documents found</td></tr>`;
+                } else {
+                    data.documents.forEach(doc => {
+                        let daysRemaining = doc.days_remaining !== undefined 
+                            ? doc.days_remaining 
+                            : "N/A"; 
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${doc.tenant}</td>
+                                <td>${doc.tenant_type}</td>
+                                <td>${doc.doc_type}</td>
+                                <td>${doc.expiry_date}</td>
+                                <td>${daysRemaining}</td>
+                                <td>${doc.status === "Expired" 
+                                        ? '<span class="badge bg-danger">Expired</span>' 
+                                        : '<span class="badge bg-success">Active</span>'}</td>
+                                <td>${doc.file_view_url 
+                                        ? `<a href="${doc.file_view_url}" target="_blank">View</a> | 
+                                           <a href="${doc.file_download_url}">Download</a>` 
+                                        : '<span class="text-muted">No file</span>'}</td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                // Pagination
+                let pagination = document.getElementById("pagination");
+                pagination.innerHTML = "";
+                if (data.has_prev) {
+                    pagination.innerHTML += `<li class="page-item"><a class="page-link" href="#" data-page="${data.page - 1}">Previous</a></li>`;
+                }
+                for (let i = 1; i <= data.total_pages; i++) {
+                    pagination.innerHTML += `<li class="page-item ${i === data.page ? "active" : ""}">
+                        <a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+                }
+                if (data.has_next) {
+                    pagination.innerHTML += `<li class="page-item"><a class="page-link" href="#" data-page="${data.page + 1}">Next</a></li>`;
+                }
+            });
+    }
+
+    // Filter form submit
+    document.getElementById("filter-form").addEventListener("submit", function(e) {
+        e.preventDefault();
+        page = 1; 
+        loadDocuments();
+    });
+
+    // Sorting
+    document.querySelectorAll(".sort").forEach(link => {
+        link.addEventListener("click", function(e) {
+            e.preventDefault();
+            sort_by = this.dataset.sort;
+            page = 1;
+            loadDocuments();
+        });
+    });
+
+    // Pagination click
+    document.getElementById("pagination").addEventListener("click", function(e) {
+        if (e.target.tagName === "A") {
+            e.preventDefault();
+            page = parseInt(e.target.dataset.page);
+            loadDocuments();
+        }
+    });
+
+    // Export to Excel
+    document.getElementById("export-btn").addEventListener("click", function(e) {
+        e.preventDefault();
+        let days = document.getElementById("days").value || 7;
+        let search = document.getElementById("search").value;
+        let url = `/export-tracked-expiry/?days=${days}&search=${encodeURIComponent(search)}`;
+        window.location.href = url; // triggers download
+    });
+
+    // Load initial data
+    loadDocuments();
+});
+</script>
+{% endblock %}

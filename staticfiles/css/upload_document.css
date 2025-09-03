@@ -1,0 +1,98 @@
+.upload-container {
+    background-color: #fff;
+    padding: 30px 40px;
+    max-width: 640px;
+    margin: 40px auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.upload-title {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 22px;
+    color: #333;
+    font-weight: 600;
+    text-decoration: none; /* Removes underline if heading is wrapped in a tag */
+}
+
+.upload-back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #1e1e2f;
+    text-decoration: none; /* No underline */
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.upload-back-link:hover {
+    color: #0056b3;
+    text-decoration: underline; /* Add underline only on hover */
+}
+
+.upload-form-group {
+    margin-bottom: 25px;
+}
+
+.upload-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #444;
+}
+
+.upload-form-group input[type="text"],
+.upload-form-group input[type="file"],
+.upload-form-group input[type="date"],
+.upload-form-group select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 15px;
+    transition: border-color 0.3s ease;
+}
+
+.upload-form-group input:focus,
+.upload-form-group select:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+.select2-container {
+    width: 100% !important;
+}
+
+.upload-submit-btn {
+    width: 100%;
+    background: #1e1e2f;
+    color: white;
+    padding: 12px;
+    border: none;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s ease;
+}
+
+.upload-submit-btn:hover {
+    background: #0056b3;
+}
+
+.upload-errorlist {
+    color: #d8000c;
+    margin-top: 5px;
+    margin-bottom: 0;
+    font-size: 13px;
+}
+
+.upload-message {
+    color: green;
+    font-size: 15px;
+    text-align: center;
+    margin-bottom: 20px;
+}

@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload Documents by Type{% endblock %}
+
+{% block page_title %}
+<i class="fas fa-file-upload" style="margin-right: 8px;"></i>Bulk Upload
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/upload.css' %}">
+{% endblock %}
+
+{% block content %}
+
+{% if tenant_selected %}
+    <input type="hidden" id="tenant" name="tenant" value="{{ tenant_selected.id }}">
+    <p><strong>Uploading for:</strong> {{ tenant_selected.name }}</p>
+{% else %}
+<div class="tenant-selection">
+    <div class="field">
+        <label for="tenant-search">Search Tenant:</label>
+        <input type="text" id="tenant-search" placeholder="Type to search tenants...">
+    </div>
+    <div class="field">
+        <label for="tenant">Select Tenant:</label>
+        <select id="tenant" name="tenant" required>
+            <option value="">-- Select Tenant --</option>
+            {% for tenant in tenants %}
+                <option value="{{ tenant.id }}">{{ tenant }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+{% endif %}
+
+<div id="upload-form">
+  {% for key, label in doc_types %}
+    <div class="doc-block" data-doc-type="{{ key }}">
+      <label>{{ label }} ({{ key }})</label>
+
+      <div class="file-inputs-container" id="file-inputs-{{ key }}">
+        <div class="drop-area" data-doc-type="{{ key }}">
+          Drop files here or click to browse
+          <input type="file" multiple hidden>
+        </div>
+      </div>
+
+      <button class="add-more-btn" type="button" data-doc-type="{{ key }}">Add More</button>
+      <div class="file-list" id="file-list-{{ key }}"></div>
+    </div>
+  {% endfor %}
+
+  <button id="upload-btn" type="button">Upload Documents</button>
+</div>
+
+<div id="response" class="success-msg"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        document.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+
+    const tenantSearchInput = document.getElementById('tenant-search');
+    const tenantSelect = document.getElementById('tenant');
+
+    if (tenantSearchInput && tenantSelect) {
+        tenantSearchInput.addEventListener('input', function() {
+            const search = this.value.toLowerCase();
+            Array.from(tenantSelect.options).forEach(option => {
+                if (option.value === "") {
+                    option.style.display = "";
+                    return;
+                }
+                const text = option.text.toLowerCase();
+                option.style.display = text.includes(search) ? "" : "none";
+            });
+        });
+    }
+
+    const docTypes = Array.from(document.querySelectorAll('.doc-block')).map(block => block.getAttribute('data-doc-type'));
+    const filesMap = {};
+    docTypes.forEach(dt => { filesMap[dt] = []; });
+
+    function createDropArea(docType) {
+        const dropArea = document.createElement('div');
+        dropArea.classList.add('drop-area');
+        dropArea.setAttribute('data-doc-type', docType);
+        dropArea.textContent = 'Drop files here or click to browse';
+
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.multiple = true;
+        input.hidden = true;
+        dropArea.appendChild(input);
+
+        dropArea.addEventListener('click', () => input.click());
+        input.addEventListener('change', e => {
+            addFiles(docType, e.target.files);
+            input.value = '';
+        });
+
+        dropArea.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropArea.classList.add('dragover');
+        });
+
+        dropArea.addEventListener('dragleave', e => {
+            e.preventDefault();
+            dropArea.classList.remove('dragover');
+        });
+
+        dropArea.addEventListener('drop', e => {
+            e.preventDefault();
+            dropArea.classList.remove('dragover');
+            addFiles(docType, e.dataTransfer.files);
+        });
+
+        return dropArea;
+    }
+
+    function addFiles(docType, newFiles) {
+        const filesArray = Array.from(newFiles);
+        filesMap[docType] = filesMap[docType].concat(filesArray);
+        updateFileList(docType);
+    }
+
+    function updateFileList(docType) {
+        const listDiv = document.getElementById(`file-list-${docType}`);
+        listDiv.innerHTML = '';
+        filesMap[docType].forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.classList.add('file-item');
+            fileItem.textContent = file.name;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.classList.add('remove-file');
+            removeBtn.type = 'button';
+            removeBtn.innerHTML = '&times;';
+            removeBtn.title = 'Remove this file';
+
+            removeBtn.addEventListener('click', () => {
+                filesMap[docType].splice(index, 1);
+                updateFileList(docType);
+            });
+
+            fileItem.appendChild(removeBtn);
+            listDiv.appendChild(fileItem);
+        });
+    }
+
+    docTypes.forEach(docType => {
+        const container = document.getElementById(`file-inputs-${docType}`);
+        container.innerHTML = '';
+        container.appendChild(createDropArea(docType));
+
+        const addMoreBtn = document.querySelector(`.add-more-btn[data-doc-type="${docType}"]`);
+        addMoreBtn.addEventListener('click', () => {
+            container.appendChild(createDropArea(docType));
+        });
+    });
+
+    document.getElementById('upload-btn').addEventListener('click', () => {
+        const tenantId = document.getElementById('tenant')?.value;
+        if (!tenantId) {
+            alert('Please select a tenant.');
+            return;
+        }
+
+        const responseDiv = document.getElementById('response');
+        responseDiv.innerText = '';
+        responseDiv.className = '';
+
+        const uploadData = new FormData();
+        uploadData.append('tenant', tenantId);
+
+        for (const [docType, files] of Object.entries(filesMap)) {
+            files.forEach(file => {
+                uploadData.append(`${docType}_files[]`, file);
+            });
+        }
+
+        fetch("{% url 'upload_documents_by_type' %}", {
+            method: 'POST',
+            body: uploadData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                responseDiv.className = 'success-msg';
+                responseDiv.innerText = data.success;
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                responseDiv.className = 'error-msg';
+                responseDiv.innerText = data.error || 'Upload failed.';
+            }
+        })
+        .catch(error => {
+            responseDiv.className = 'error-msg';
+            responseDiv.innerText = 'Upload failed: ' + error.message;
+        });
+    });
+});
+</script>
+
+{% endblock %}
