@@ -21,4 +21,12 @@ db.sqlite3
 # GitHub default
 .DS_Store
 
+# Certificate and key files
+cert.crt
+cert.key
 
+# (Optional) Ignore any other certs/keys by extension
+*.crt
+*.key
+*.pem
+*.pub
